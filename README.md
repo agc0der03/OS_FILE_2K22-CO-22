@@ -10,7 +10,7 @@
   <li>Priority Scheduling</li>
   <li>Child process using fork()</li>
   <li>Banker’s Algorithm</li>
-  <li>Peterson's Algorithm</li>
+  <li>Dekker's Algorithm</li>
   <li>Reader and Writer Problem</li>
   <li>Optimal Page Replacement Algorithm</li>
   <li>Least Recently Used (LRU) Page Replacement Algorithm</li>
