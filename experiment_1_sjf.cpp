@@ -1,66 +1,88 @@
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <limits>
+
 using namespace std;
 
-int main() {
-    // Matrix for storing Process Id, Burst Time, Waiting Time & Turnaround Time.
-    int processes[100][4];
-    int n, total_waiting_time = 0, index, temp;
-    float avg_waiting_time, avg_turnaround_time;
+class Process {
+public:
+    int id;
+    int arrivalTime;
+    int burstTime;
+    bool completed;
 
-    cout << "Enter number of processes: ";
-    cin >> n;
+    Process(int _id, int _arrivalTime, int _burstTime) : id(_id), arrivalTime(_arrivalTime), burstTime(_burstTime), completed(false) {}
+};
 
-    cout << "Enter Burst Time for each process:" << endl;
+bool compareArrivalTime(const Process &a, const Process &b) {
+    return a.arrivalTime < b.arrivalTime;
+}
 
-    // User Input Burst Time and assigning Process Id.
-    for (int i = 0; i < n; i++) {
-        cout << "P" << i + 1 << ": ";
-        cin >> processes[i][1]; // Burst Time
-        processes[i][0] = i + 1; // Process Id
-    }
+bool compareBurstTime(const Process &a, const Process &b) {
+    return a.burstTime < b.burstTime;
+}
 
-    // Sorting processes according to their Burst Time using Selection Sort.
-    for (int i = 0; i < n; i++) {
-        index = i;
-        for (int j = i + 1; j < n; j++) {
-            if (processes[j][1] < processes[index][1])
-                index = j;
+class Scheduler {
+public:
+    void shortestJobFirst(vector<Process> &processes) {
+        int n = processes.size();
+        sort(processes.begin(), processes.end(), compareArrivalTime);
+
+        int currentTime = 0;
+        int totalWaitTime = 0;
+        int totalTurnaroundTime = 0;
+        int completedProcesses = 0;
+
+        cout << "Pid\tAT\tBT\tWT\tTAT\n";
+
+        while (completedProcesses < n) {
+            int shortestBurst = numeric_limits<int>::max();
+            int shortestIndex = -1;
+
+            for (int i = 0; i < n; i++) {
+                if (!processes[i].completed && processes[i].arrivalTime <= currentTime && processes[i].burstTime < shortestBurst) {
+                    shortestBurst = processes[i].burstTime;
+                    shortestIndex = i;
+                }
+            }
+
+            if (shortestIndex == -1) {
+                currentTime++;
+                continue; // No process remaining to execute, move to next time unit
+            }
+
+            Process &currentProcess = processes[shortestIndex];
+            currentProcess.completed = true;
+
+            cout << currentProcess.id << "\t" << currentProcess.arrivalTime << "\t" << currentProcess.burstTime << "\t";
+
+            totalWaitTime += currentTime - currentProcess.arrivalTime;
+            totalTurnaroundTime += currentTime + currentProcess.burstTime - currentProcess.arrivalTime;
+
+            currentTime += currentProcess.burstTime;
+
+            cout << currentTime - currentProcess.arrivalTime - currentProcess.burstTime << "\t";
+            cout << currentTime - currentProcess.arrivalTime << endl;
+
+            completedProcesses++;
         }
-        // Swap Burst Time
-        temp = processes[i][1];
-        processes[i][1] = processes[index][1];
-        processes[index][1] = temp;
 
-        // Swap Process Id
-        temp = processes[i][0];
-        processes[i][0] = processes[index][0];
-        processes[index][0] = temp;
+        cout << "Average Waiting Time: " << static_cast<double>(totalWaitTime) / n << endl;
+        cout << "Average Turnaround Time: " << static_cast<double>(totalTurnaroundTime) / n << endl;
     }
+};
 
-    processes[0][2] = 0; // First process waiting time is 0
+int main() {
+    vector<Process> processes = {// for each process
+        Process(1, 0, 6),        //{pid,AT,BT}
+        Process(2, 2, 8),
+        Process(3, 5, 7),
+        Process(4, 5, 3)
+    };
 
-    // Calculation of Waiting Times
-    for (int i = 1; i < n; i++) {
-        processes[i][2] = 0;
-        for (int j = 0; j < i; j++)
-            processes[i][2] += processes[j][1]; // Sum of all previous burst times
-        total_waiting_time += processes[i][2];
-    }
+    Scheduler scheduler;
+    scheduler.shortestJobFirst(processes);
 
-    avg_waiting_time = (float)total_waiting_time / n;
-    total_waiting_time = 0;
-
-    cout << "P   BT   WT   TAT" << endl;
-
-    // Calculation of Turnaround Time and printing the data.
-    for (int i = 0; i < n; i++) {
-        processes[i][3] = processes[i][1] + processes[i][2]; // Burst Time + Waiting Time
-        total_waiting_time += processes[i][3];
-        cout << "P" << processes[i][0] << "   " << processes[i][1] << "   " << processes[i][2] << "   " << processes[i][3] << endl;
-    }
-
-    avg_turnaround_time = (float)total_waiting_time / n;
-    cout << "Average Waiting Time= " << avg_waiting_time << endl;
-    cout << "Average Turnaround Time= " << avg_turnaround_time << endl;
     return 0;
 }
